@@ -16,6 +16,7 @@ The database `data/inventory.db` is created with 12 sample parts on the first lo
 
 ```bash
 git clone https://github.com/Evocthinks/mci-ic-hw1-mcp-workshop-parts.git
+cd mci-ic-hw1-mcp-workshop-parts
 uv sync
 ```
 
@@ -34,10 +35,10 @@ Gemini free tier (Google AI Studio):
 ```
 LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
 LLM_API_KEY=your-ai-studio-key
-LLM_MODEL=gemini-3.8-flash
+LLM_MODEL=gemini-3.6-flash
 ```
 
-Without uv: `python -m venv .venv`, activate it, then `pip install mcp openai python-dotenv pytest`.
+Without uv: `python -m venv .venv`, activate it, then `pip install "mcp>=1.2,<2" openai python-dotenv pytest`. The code uses the FastMCP API of mcp 1.x, which mcp 2.x no longer has.
 
 ## Run
 
@@ -47,7 +48,7 @@ uv run python agent.py
 
 This starts `server.py` over stdio, runs the three demo questions and prints Thought, Action and Observation for each step. At the end it reads the resource `audit://log`. Your own question: `uv run python agent.py "How many relays are in stock?"`.
 
-Every ReAct step is one LLM request, so the three demo questions need about 12 requests. The Gemini free tier allows 5 requests per minute per model. When the endpoint answers with HTTP 429, the agent waits for the retry delay the endpoint names and tries again (at most 3 times), so a full run takes about 3 minutes on the free tier. If the delay is longer than 90 seconds, the daily quota is used up and the agent stops with the error.
+Every ReAct step is one LLM request, so the three demo questions need about 12 requests. The Gemini free tier allows only a few requests per minute per model (5 in our test). When the endpoint answers with HTTP 429, the agent waits for the retry delay the endpoint names and tries the same request again, at most 3 times per request. A full run therefore takes about 3 minutes on the free tier. If the named delay is longer than 90 seconds, the agent assumes the daily quota is used up and stops with the error.
 
 ## Tests
 
@@ -55,4 +56,4 @@ Every ReAct step is one LLM request, so the three demo questions need about 12 r
 uv run pytest
 ```
 
-The tests cover the SQL lookup, the discount tiers, the audit log and the agent loop against the real server with a scripted model (no API key needed).
+The tests cover the SQL lookup, the discount tiers, the audit log, the agent loop against the real server with a scripted model, and the wait-and-retry on HTTP 429 (no API key needed).
